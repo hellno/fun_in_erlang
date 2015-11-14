@@ -7,20 +7,23 @@ start() ->
 
 %% Frequencies = {[LIST_OF_USED_FREQs],[LIST_OF_UNUSED_FREQs]}
 init() ->
+	process_flag(trap_exit, true),
 	Frequencies = {get_frequencies(), []},
 	loop(Frequencies).
 
 get_frequencies() -> [10,11,23,42].
-
-stop() -> call(stop).
-allocate() -> call(allocate).
-deallocate(Freq) -> call({deallocate, Freq}).
 
 call(Msg) ->
 	frequency ! {request, self(), Msg},
 	receive
 		{reply, Reply} -> Reply
 	end.
+
+%% client functions
+
+stop() -> call(stop).
+allocate() -> call(allocate).
+deallocate(Freq) -> call({deallocate, Freq}).
 
 %% MAIN LOOHOP
 
@@ -36,6 +39,10 @@ loop(Frequencies) ->
 			reply(Pid, ok),
 			loop(NewFrequencies);
 
+		{'EXIT', Pid, _Reason} ->
+			NewFrequencies = exited(Frequencies, Pid),
+			loop(NewFrequencies);
+
 		{request, Pid, stop} ->
 			reply(Pid, ok)
 	end.
@@ -44,14 +51,25 @@ reply(Pid, Reply) ->
 	Pid ! {reply, Reply}.
 
 allocate({[], Allocated}, _Pid) ->
-	{{[], Allocated}, {error, no_frequency}};
+	{{[], Allocated}, {error, no_frequencies}};
 
 allocate({[Freq|Free], Allocated}, Pid) ->
-	{{Free, [{Free, Pid}|Allocated]}, {ok, Freq}}.
+	link(Pid),
+	{{Free, [{Freq, Pid}|Allocated]}, {ok, Freq}}.
 
 deallocate({Free, Allocated}, Freq) ->
+	{value, {Freq, Pid}} = lists:keysearch(Freq, 1, Allocated),
+	unlink(Pid),
 	NewAllocated = lists:keydelete(Freq, 1, Allocated),
 	{[Freq|Free], NewAllocated}.
 
+exited({Free, Allocated}, Pid) ->
+	case lists:keysearch(Pid, 2, Allocated) of
+		{value, {Freq, Pid}} ->
+			NewAllocated = lists:keydelete(Freq, 1, Allocated),
+			{[Freq|Free], NewAllocated};
+		false ->
+			{Free, Allocated}
+	end.
 
 
