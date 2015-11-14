@@ -17,5 +17,5 @@ loop() ->
 		stop ->
 			true
 	after
-		2000 -> true.
+		2000 -> true
 	end.

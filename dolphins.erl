@@ -18,6 +18,6 @@ dolphin2() ->
             dolphin2();
         {From, fish} ->
             From ! "FISH, THANKS!";
-        _ -> io:format("stupid human!~n")
-        dolphin2().
+        _ -> io:format("stupid human!~n"),
+        dolphin2()
     end.

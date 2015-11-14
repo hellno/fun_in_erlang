@@ -24,9 +24,9 @@ restart_child(Pid, ChildList) ->
 		{value, {Pid, {M, F, A, permanent}}} ->
 			{ok, NewPid} = apply(M, F, A),
 			io:format("~p was restarted, new Pid ~p~n",[Pid, NewPid]),
-			[{NewPid, {M, F, A, permanent}} | lists:keydelete(Pid, 1, ChildList)]
+			[{NewPid, {M, F, A, permanent}} | lists:keydelete(Pid, 1, ChildList)];
 		false ->
-			io:format("~p was NOT restarted~n",[Pid]),
+			io:format("~p was NOT restarted~n",[Pid])
 	end.
 	
 loop(ChildList) ->

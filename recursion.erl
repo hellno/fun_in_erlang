@@ -20,7 +20,7 @@ len([]) -> 0;
 len([_ | Tail]) -> 1 + len(Tail).
 
 even([]) -> [];
-even([{name, content} | Tail]) when Head rem 2 == 0 -> [Head | even(Tail)];
+even([Head | Tail]) when Head rem 2 == 0 -> [Head | even(Tail)];
 even([_ | Tail]) -> even(Tail).
 
 member(_, []) -> false;
